@@ -8,10 +8,15 @@ import { Friendship } from './entities/friendship.entity'; // User 엔티티 imp
 import { PhotoSession } from './entities/photo-session.entity'; // User 엔티티 import
 import { SessionInvite } from './entities/session-invite.entity'; // User 엔티티 import
 import { Notification } from './entities/notification.entity';
-
+import { AuthModule } from './auth/auth.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal:true,
+      envFilePath: '.env'
+    }),
     TypeOrmModule.forRoot({
       type: 'postgres', // 데이터베이스 타입
       host: 'localhost', // PostgreSQL 호스트 (로컬 머신)
@@ -23,6 +28,7 @@ import { Notification } from './entities/notification.entity';
       synchronize: true, // 개발 단계에서만 사용 권장: 엔티티 기반으로 DB 스키마 자동 동기화
       autoLoadEntities: true, // 엔티티 파일 자동 로드
     }),
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
