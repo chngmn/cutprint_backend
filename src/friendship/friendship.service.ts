@@ -1,0 +1,205 @@
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Friendship } from '../entities/friendship.entity';
+import { User } from '../entities/user.entity';
+
+@Injectable()
+export class FriendshipService {
+  constructor(
+    @InjectRepository(Friendship)
+    private friendshipRepository: Repository<Friendship>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+  ) {}
+
+  // 친구 요청 보내기
+  async sendFriendRequest(requesterId: number, receiverId: number): Promise<Friendship> {
+    if (requesterId === receiverId) {
+      throw new BadRequestException('자기 자신에게 친구 요청을 보낼 수 없습니다.');
+    }
+
+    // 받는 사람이 존재하는지 확인
+    const receiver = await this.userRepository.findOne({ where: { id: receiverId } });
+    if (!receiver) {
+      throw new NotFoundException('사용자를 찾을 수 없습니다.');
+    }
+
+    // 이미 친구 요청이 있는지 확인 (양방향)
+    const existingFriendship = await this.friendshipRepository.findOne({
+      where: [
+        { requester_id: requesterId, receiver_id: receiverId },
+        { requester_id: receiverId, receiver_id: requesterId }
+      ]
+    });
+
+    if (existingFriendship) {
+      if (existingFriendship.status === 'accepted') {
+        throw new BadRequestException('이미 친구입니다.');
+      } else if (existingFriendship.status === 'pending') {
+        throw new BadRequestException('이미 친구 요청이 있습니다.');
+      }
+    }
+
+    const friendship = this.friendshipRepository.create({
+      requester_id: requesterId,
+      receiver_id: receiverId,
+      status: 'pending',
+    });
+
+    return await this.friendshipRepository.save(friendship);
+  }
+
+  // 친구 요청 수락
+  async acceptFriendRequest(requestId: number, userId: number): Promise<Friendship> {
+    const friendship = await this.friendshipRepository.findOne({
+      where: { id: requestId, receiver_id: userId, status: 'pending' }
+    });
+
+    if (!friendship) {
+      throw new NotFoundException('친구 요청을 찾을 수 없습니다.');
+    }
+
+    friendship.status = 'accepted';
+    friendship.responded_at = new Date();
+
+    return await this.friendshipRepository.save(friendship);
+  }
+
+  // 친구 요청 거절
+  async declineFriendRequest(requestId: number, userId: number): Promise<void> {
+    const friendship = await this.friendshipRepository.findOne({
+      where: { id: requestId, receiver_id: userId, status: 'pending' }
+    });
+
+    if (!friendship) {
+      throw new NotFoundException('친구 요청을 찾을 수 없습니다.');
+    }
+
+    friendship.status = 'rejected';
+    friendship.responded_at = new Date();
+    await this.friendshipRepository.save(friendship);
+  }
+
+  // 친구 요청 취소
+  async cancelFriendRequest(requestId: number, userId: number): Promise<void> {
+    const friendship = await this.friendshipRepository.findOne({
+      where: { id: requestId, requester_id: userId, status: 'pending' }
+    });
+
+    if (!friendship) {
+      throw new NotFoundException('친구 요청을 찾을 수 없습니다.');
+    }
+
+    await this.friendshipRepository.remove(friendship);
+  }
+
+  // 내 친구 목록 조회
+  async getFriends(userId: number): Promise<User[]> {
+    const friendships = await this.friendshipRepository.find({
+      where: [
+        { requester_id: userId, status: 'accepted' },
+        { receiver_id: userId, status: 'accepted' }
+      ],
+      relations: ['requester', 'receiver']
+    });
+
+    // 내가 아닌 상대방 정보만 반환
+    return friendships.map(friendship => 
+      friendship.requester_id === userId ? friendship.receiver : friendship.requester
+    );
+  }
+
+  // 받은 친구 요청 목록 조회
+  async getReceivedFriendRequests(userId: number): Promise<{ id: number; user: User; requested_at: Date }[]> {
+    const friendships = await this.friendshipRepository.find({
+      where: { receiver_id: userId, status: 'pending' },
+      relations: ['requester'],
+      order: { requested_at: 'DESC' }
+    });
+
+    return friendships.map(friendship => ({
+      id: friendship.id,
+      user: friendship.requester,
+      requested_at: friendship.requested_at
+    }));
+  }
+
+  // 보낸 친구 요청 목록 조회
+  async getSentFriendRequests(userId: number): Promise<{ id: number; user: User; requested_at: Date }[]> {
+    const friendships = await this.friendshipRepository.find({
+      where: { requester_id: userId, status: 'pending' },
+      relations: ['receiver'],
+      order: { requested_at: 'DESC' }
+    });
+
+    return friendships.map(friendship => ({
+      id: friendship.id,
+      user: friendship.receiver,
+      requested_at: friendship.requested_at
+    }));
+  }
+
+  // 사용자 검색
+  async searchUsers(query: string, currentUserId: number): Promise<any[]> {
+    const users = await this.userRepository.createQueryBuilder('user')
+      .where('user.nickname ILIKE :query OR user.email ILIKE :query', { query: `%${query}%` })
+      .andWhere('user.id != :currentUserId', { currentUserId })
+      .getMany();
+
+    // 각 사용자와의 친구 관계 상태 확인
+    const usersWithStatus = await Promise.all(
+      users.map(async (user) => {
+        const friendship = await this.friendshipRepository.findOne({
+          where: [
+            { requester_id: currentUserId, receiver_id: user.id },
+            { requester_id: user.id, receiver_id: currentUserId }
+          ]
+        });
+
+        let isFriend = false;
+        let hasSentRequest = false;
+        let hasReceivedRequest = false;
+
+        if (friendship) {
+          if (friendship.status === 'accepted') {
+            isFriend = true;
+          } else if (friendship.status === 'pending') {
+            if (friendship.requester_id === currentUserId) {
+              hasSentRequest = true;
+            } else {
+              hasReceivedRequest = true;
+            }
+          }
+        }
+
+        return {
+          id: user.id.toString(),
+          name: user.nickname,
+          profileImage: user.profile_image_url,
+          isFriend,
+          hasSentRequest,
+          hasReceivedRequest
+        };
+      })
+    );
+
+    return usersWithStatus;
+  }
+
+  // 친구 삭제
+  async removeFriend(userId: number, friendId: number): Promise<void> {
+    const friendship = await this.friendshipRepository.findOne({
+      where: [
+        { requester_id: userId, receiver_id: friendId, status: 'accepted' },
+        { requester_id: friendId, receiver_id: userId, status: 'accepted' }
+      ]
+    });
+
+    if (!friendship) {
+      throw new NotFoundException('친구 관계를 찾을 수 없습니다.');
+    }
+
+    await this.friendshipRepository.remove(friendship);
+  }
+}

@@ -9,6 +9,7 @@ import { PhotoSession } from './entities/photo-session.entity'; // User 엔티�
 import { SessionInvite } from './entities/session-invite.entity'; // User 엔티티 import
 import { Notification } from './entities/notification.entity';
 import { AuthModule } from './auth/auth.module';
+import { FriendshipModule } from './friendship/friendship.module';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
@@ -29,6 +30,7 @@ import { ConfigModule } from '@nestjs/config';
       autoLoadEntities: true, // 엔티티 파일 자동 로드
     }),
     AuthModule,
+    FriendshipModule,
   ],
   controllers: [AppController],
   providers: [AppService],
