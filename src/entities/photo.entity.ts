@@ -12,7 +12,10 @@ export class Photo {
   creator_id: number; // 외래 키 (FK) 컬럼: 이 네 컷 사진을 만든 사용자 ID
 
   @Column({ type: 'text' })
-  url: string; // 완성된 네 컷 사진 이미지의 URL
+  url: string; // S3에 저장된 완성된 네 컷 사진 이미지의 URL
+
+  @Column({ type: 'text', nullable: true })
+  s3_key?: string; // S3 객체 키 (삭제 시 필요)
 
   // 'taken_at' 대신 'created_at'으로 변경하여 사진이 생성된 시점을 나타냅니다.
   @CreateDateColumn({ type: 'timestamptz' })

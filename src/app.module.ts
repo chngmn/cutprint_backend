@@ -12,13 +12,16 @@ import { AuthModule } from './auth/auth.module';
 import { FriendshipModule } from './friendship/friendship.module';
 import { ConfigModule } from '@nestjs/config';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
+import awsConfig from './config/aws.config';
+import { PhotoModule } from './photo/photo.module';
 
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal:true,
-      envFilePath: '.env'
+      isGlobal: true,
+      envFilePath: '.env',
+      load: [awsConfig],
     }),
     TypeOrmModule.forRoot({
       type: 'postgres', // 데이터베이스 타입
@@ -34,6 +37,7 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
     }),
     AuthModule,
     FriendshipModule,
+    PhotoModule,
   ],
   controllers: [AppController],
   providers: [AppService],
