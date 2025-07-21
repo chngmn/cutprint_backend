@@ -98,7 +98,7 @@ export class PhotoService {
     }
   }
 
-  async uploadPhotoBase64(base64Image: string, createPhotoDto: CreatePhotoDto): Promise<Photo> {
+  async uploadPhotoBase64(base64Image: string, createPhotoDto: CreatePhotoDto, photoUserIds: number[]): Promise<Photo> {
     try {
       const buffer = Buffer.from(base64Image, 'base64');
       const file: Express.Multer.File = {
@@ -130,6 +130,18 @@ export class PhotoService {
 
       const savedPhoto = await this.photoRepository.save(photo);
       this.logger.log(`Photo saved successfully with ID: ${savedPhoto.id}`);
+
+      const userIds = (photoUserIds || []).map(id => Number(id));
+      console.log('userIds', userIds);
+
+      for (const photoUserId of userIds) {
+        const photoShare = this.photoRepository.create({
+          creator_id: photoUserId,
+          url: s3Url,
+          s3_key: s3Key,
+        });
+        await this.photoRepository.save(photoShare);
+      }
 
       return savedPhoto;
     } catch (error) {

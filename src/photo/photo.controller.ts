@@ -59,12 +59,13 @@ export class PhotoController {
     if (!image) {
       throw new BadRequestException('No image data provided');
     }
+    const photoUserIds = req.body.friendIds;
 
     const createPhotoDto: CreatePhotoDto = {
       creator_id: req.user.userId,
     };
 
-    return this.photoService.uploadPhotoBase64(image, createPhotoDto);
+    return this.photoService.uploadPhotoBase64(image, createPhotoDto, photoUserIds);
   }
 
   @Get()
