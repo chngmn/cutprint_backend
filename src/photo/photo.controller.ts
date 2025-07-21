@@ -88,6 +88,12 @@ export class PhotoController {
     return this.photoService.getPhotoById(id);
   }
 
+  @Get(':id/share')
+  async getPhotoForSharing(@Param('id', ParseIntPipe) id: number): Promise<{ photo: Photo }> {
+    const photo = await this.photoService.getPhotoById(id);
+    return { photo };
+  }
+
   @Delete(':id')
   async deletePhoto(
     @Param('id', ParseIntPipe) id: number,
