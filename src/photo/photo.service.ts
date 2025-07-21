@@ -59,6 +59,7 @@ export class PhotoService {
   }
 
   async getPhotosByUserId(userId: number): Promise<Photo[]> {
+    console.log('user id', userId);
     return this.photoRepository.find({
       where: { creator_id: userId },
       relations: ['creator'],

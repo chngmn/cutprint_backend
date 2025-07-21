@@ -75,11 +75,14 @@ export class PhotoController {
   @Get('my-photos')
   async getMyPhotos(@Req() req) {
     // 사용자 인증이 필요하다면, req.user 등을 활용
-    return this.photoService.getPhotosByUserId(req.user.id);
+    console.log('userId', req.user.userId);
+    return this.photoService.getPhotosByUserId(req.user.userId);
+    
   }
 
   @Get('user/:userId')
   async getUserPhotos(@Param('userId', ParseIntPipe) userId: number): Promise<Photo[]> {
+    console.log('photo controller user id', userId);
     return this.photoService.getPhotosByUserId(userId);
   }
 
