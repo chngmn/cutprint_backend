@@ -17,7 +17,9 @@ export class NotificationController {
   @UseGuards(JwtAuthGuard)
   @Get('unread')
   async getUnreadNotifications(@Req() req) {
-    return this.notificationService.getUnreadNotificationsByUser(req.user.userId);
+    return this.notificationService.getUnreadNotificationsByUser(
+      req.user.userId,
+    );
   }
 
   @UseGuards(JwtAuthGuard)
@@ -25,4 +27,4 @@ export class NotificationController {
   async markNotificationAsRead(@Param('id') id: number, @Req() req) {
     return this.notificationService.markAsRead(Number(id), req.user.userId);
   }
-} 
+}

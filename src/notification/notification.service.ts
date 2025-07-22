@@ -12,7 +12,10 @@ export class NotificationService {
   ) {}
 
   async createNotification(userId: number, message: string) {
-    const notification = this.notificationRepository.create({ user_id: userId, message });
+    const notification = this.notificationRepository.create({
+      user_id: userId,
+      message,
+    });
     return this.notificationRepository.save(notification);
   }
 
@@ -40,4 +43,4 @@ export class NotificationService {
     notification.is_read = true;
     return this.notificationRepository.save(notification);
   }
-} 
+}

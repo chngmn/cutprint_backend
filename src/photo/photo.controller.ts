@@ -22,20 +22,25 @@ import { Photo } from '../entities/photo.entity';
 @Controller('photos')
 @UseGuards(JwtAuthGuard)
 export class PhotoController {
-  constructor(private readonly photoService: PhotoService) { }
+  constructor(private readonly photoService: PhotoService) {}
 
   @Post('upload')
-  @UseInterceptors(FileInterceptor('photo', {
-    fileFilter: (req, file, callback) => {
-      if (!file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)) {
-        return callback(new BadRequestException('Only image files are allowed'), false);
-      }
-      callback(null, true);
-    },
-    limits: {
-      fileSize: 10 * 1024 * 1024, // 10MB limit
-    },
-  }))
+  @UseInterceptors(
+    FileInterceptor('photo', {
+      fileFilter: (req, file, callback) => {
+        if (!file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)) {
+          return callback(
+            new BadRequestException('Only image files are allowed'),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+      limits: {
+        fileSize: 10 * 1024 * 1024, // 10MB limit
+      },
+    }),
+  )
   async uploadPhoto(
     @UploadedFile() file: Express.Multer.File,
     @Body('visibility') visibility: 'PRIVATE' | 'CLOSE_FRIENDS' | 'ALL_FRIENDS',
@@ -69,7 +74,11 @@ export class PhotoController {
       visibility: visibility || 'ALL_FRIENDS',
     };
 
-    return this.photoService.uploadPhotoBase64(image, createPhotoDto, photoUserIds);
+    return this.photoService.uploadPhotoBase64(
+      image,
+      createPhotoDto,
+      photoUserIds,
+    );
   }
 
   @Get()
@@ -82,11 +91,13 @@ export class PhotoController {
     // 사용자 인증이 필요하다면, req.user 등을 활용
     console.log('userId', req.user.userId);
     return this.photoService.getPhotosByUserId(req.user.userId);
-    
   }
 
   @Get('user/:userId')
-  async getUserPhotos(@Param('userId', ParseIntPipe) userId: number, @Req() req): Promise<Photo[]> {
+  async getUserPhotos(
+    @Param('userId', ParseIntPipe) userId: number,
+    @Req() req,
+  ): Promise<Photo[]> {
     console.log('photo controller user id', userId);
     return this.photoService.getPhotosByUserId(userId, req.user.userId);
   }
@@ -97,7 +108,9 @@ export class PhotoController {
   }
 
   @Get(':id/share')
-  async getPhotoForSharing(@Param('id', ParseIntPipe) id: number): Promise<{ photo: Photo }> {
+  async getPhotoForSharing(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<{ photo: Photo }> {
     const photo = await this.photoService.getPhotoById(id);
     return { photo };
   }
@@ -120,11 +133,15 @@ export class PhotoController {
     if (!visibility) {
       throw new BadRequestException('Visibility is required');
     }
-    
-    const photo = await this.photoService.updatePhotoVisibility(id, req.user.userId, visibility);
-    return { 
+
+    const photo = await this.photoService.updatePhotoVisibility(
+      id,
+      req.user.userId,
+      visibility,
+    );
+    return {
       message: 'Photo visibility updated successfully',
-      photo 
+      photo,
     };
   }
 }

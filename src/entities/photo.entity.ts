@@ -1,5 +1,11 @@
 // src/photo/photo.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+} from 'typeorm';
 import { User } from './user.entity'; // User 엔티티 import
 
 @Entity('photos')
@@ -17,10 +23,10 @@ export class Photo {
   @Column({ type: 'text', nullable: true })
   s3_key?: string; // S3 객체 키 (삭제 시 필요)
 
-  @Column({ 
+  @Column({
     type: 'enum',
     enum: ['PRIVATE', 'CLOSE_FRIENDS', 'ALL_FRIENDS'],
-    default: 'ALL_FRIENDS'
+    default: 'ALL_FRIENDS',
   })
   visibility: 'PRIVATE' | 'CLOSE_FRIENDS' | 'ALL_FRIENDS'; // 사진 공개 범위
 
@@ -31,6 +37,6 @@ export class Photo {
   // 관계 정의
   // 'PhotoSession'과의 관계가 사라지고, 'User'와 직접 관계를 맺습니다.
   // User 엔티티에는 'createdPhotos'와 같은 역관계 필드가 필요합니다.
-  @ManyToOne(() => User, user => user.createdPhotos)
+  @ManyToOne(() => User, (user) => user.createdPhotos)
   creator: User;
 }

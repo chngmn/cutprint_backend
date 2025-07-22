@@ -25,4 +25,4 @@ export class UpdateLastActiveInterceptor implements NestInterceptor {
     }
     return next.handle();
   }
-} 
+}

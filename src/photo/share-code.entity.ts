@@ -1,5 +1,12 @@
 // src/photo/share-code.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, Index } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+  Index,
+} from 'typeorm';
 import { Photo } from '../entities/photo.entity';
 
 @Entity('photo_share_codes')

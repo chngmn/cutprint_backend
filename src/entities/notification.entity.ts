@@ -1,5 +1,11 @@
 // src/notification/notification.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+} from 'typeorm';
 import { User } from './user.entity'; // User 엔티티 import
 
 @Entity('notifications')
@@ -20,6 +26,6 @@ export class Notification {
   created_at: Date;
 
   // 관계 정의
-  @ManyToOne(() => User, user => user.notifications)
+  @ManyToOne(() => User, (user) => user.notifications)
   user: User;
 }

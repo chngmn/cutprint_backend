@@ -26,9 +26,12 @@ export class PhotoService {
     private userRepository: Repository<User>,
     @InjectRepository(Friendship)
     private friendshipRepository: Repository<Friendship>,
-  ) { }
+  ) {}
 
-  async uploadPhoto(file: Express.Multer.File, createPhotoDto: CreatePhotoDto): Promise<Photo> {
+  async uploadPhoto(
+    file: Express.Multer.File,
+    createPhotoDto: CreatePhotoDto,
+  ): Promise<Photo> {
     try {
       // Upload file to S3
       const s3Url = await this.s3Service.uploadFile(file, 'photos');
@@ -107,7 +110,9 @@ export class PhotoService {
     });
 
     if (!photo) {
-      throw new NotFoundException(`Photo with ID ${id} not found or you don't have permission to delete it`);
+      throw new NotFoundException(
+        `Photo with ID ${id} not found or you don't have permission to delete it`,
+      );
     }
 
     try {
@@ -125,7 +130,11 @@ export class PhotoService {
     }
   }
 
-  async uploadPhotoBase64(base64Image: string, createPhotoDto: CreatePhotoDto, photoUserIds: number[]): Promise<Photo> {
+  async uploadPhotoBase64(
+    base64Image: string,
+    createPhotoDto: CreatePhotoDto,
+    photoUserIds: number[],
+  ): Promise<Photo> {
     try {
       const buffer = Buffer.from(base64Image, 'base64');
       const file: Express.Multer.File = {
@@ -134,7 +143,7 @@ export class PhotoService {
         encoding: '7bit',
         mimetype: 'image/png',
         size: buffer.length,
-        stream: new Readable({ read() { } }),
+        stream: new Readable({ read() {} }),
         destination: '',
         filename: '',
         path: '',
@@ -159,11 +168,13 @@ export class PhotoService {
       const savedPhoto = await this.photoRepository.save(photo);
       this.logger.log(`Photo saved successfully with ID: ${savedPhoto.id}`);
 
-      const userIds = (photoUserIds || []).map(id => Number(id));
+      const userIds = (photoUserIds || []).map((id) => Number(id));
       console.log('userIds', userIds);
 
       // creator 닉네임 조회
-      const creator = await this.userRepository.findOne({ where: { id: createPhotoDto.creator_id } });
+      const creator = await this.userRepository.findOne({
+        where: { id: createPhotoDto.creator_id },
+      });
       const creatorNickname = creator?.nickname || '친구';
 
       for (const photoUserId of userIds) {
@@ -176,7 +187,7 @@ export class PhotoService {
         // 알림 생성
         await this.notificationService.createNotification(
           photoUserId,
-          `${creatorNickname}님이 사진을 앨범에 등록했습니다.`
+          `${creatorNickname}님이 사진을 앨범에 등록했습니다.`,
         );
       }
 
@@ -216,8 +227,8 @@ export class PhotoService {
     const friendship = await this.friendshipRepository.findOne({
       where: [
         { requester_id: userId1, receiver_id: userId2, status: 'accepted' },
-        { requester_id: userId2, receiver_id: userId1, status: 'accepted' }
-      ]
+        { requester_id: userId2, receiver_id: userId1, status: 'accepted' },
+      ],
     });
     return !!friendship;
   }
@@ -226,8 +237,8 @@ export class PhotoService {
     const friendship = await this.friendshipRepository.findOne({
       where: [
         { requester_id: userId, receiver_id: friendId, status: 'accepted' },
-        { requester_id: friendId, receiver_id: userId, status: 'accepted' }
-      ]
+        { requester_id: friendId, receiver_id: userId, status: 'accepted' },
+      ],
     });
 
     if (!friendship) {
@@ -246,14 +257,16 @@ export class PhotoService {
   async updatePhotoVisibility(
     photoId: number,
     userId: number,
-    visibility: 'PRIVATE' | 'CLOSE_FRIENDS' | 'ALL_FRIENDS'
+    visibility: 'PRIVATE' | 'CLOSE_FRIENDS' | 'ALL_FRIENDS',
   ): Promise<Photo> {
     const photo = await this.photoRepository.findOne({
       where: { id: photoId, creator_id: userId },
     });
 
     if (!photo) {
-      throw new NotFoundException(`Photo with ID ${photoId} not found or you don't have permission to modify it`);
+      throw new NotFoundException(
+        `Photo with ID ${photoId} not found or you don't have permission to modify it`,
+      );
     }
 
     photo.visibility = visibility;
