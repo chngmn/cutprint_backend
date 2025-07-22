@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Friendship } from '../entities/friendship.entity';
 import { User } from '../entities/user.entity';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class FriendshipService {
@@ -11,6 +12,7 @@ export class FriendshipService {
     private friendshipRepository: Repository<Friendship>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    private notificationService: NotificationService,
   ) {}
 
   // 친구 요청 보내기
@@ -24,6 +26,10 @@ export class FriendshipService {
     if (!receiver) {
       throw new NotFoundException('사용자를 찾을 수 없습니다.');
     }
+
+    // 요청자 정보 조회 (닉네임용)
+    const requester = await this.userRepository.findOne({ where: { id: requesterId } });
+    const requesterNickname = requester?.nickname || '알 수 없음';
 
     // 이미 친구 요청이 있는지 확인 (양방향)
     const existingFriendship = await this.friendshipRepository.findOne({
@@ -47,7 +53,15 @@ export class FriendshipService {
       status: 'pending',
     });
 
-    return await this.friendshipRepository.save(friendship);
+    const saved = await this.friendshipRepository.save(friendship);
+
+    // 알림 생성
+    await this.notificationService.createNotification(
+      receiverId,
+      `${requesterNickname}님이 친구 요청을 보냈습니다.`
+    );
+
+    return saved;
   }
 
   // 친구 요청 수락
@@ -63,7 +77,25 @@ export class FriendshipService {
     friendship.status = 'accepted';
     friendship.responded_at = new Date();
 
-    return await this.friendshipRepository.save(friendship);
+    const saved = await this.friendshipRepository.save(friendship);
+
+    // 친구가 된 두 사람의 닉네임 조회
+    const receiver = await this.userRepository.findOne({ where: { id: friendship.receiver_id } });
+    const requester = await this.userRepository.findOne({ where: { id: friendship.requester_id } });
+    const receiverNickname = receiver?.nickname || '상대방';
+    const requesterNickname = requester?.nickname || '상대방';
+
+    // 두 사람 모두에게 알림
+    await this.notificationService.createNotification(
+      friendship.requester_id,
+      `${receiverNickname}님과 친구가 되었습니다.`
+    );
+    await this.notificationService.createNotification(
+      friendship.receiver_id,
+      `${requesterNickname}님과 친구가 되었습니다.`
+    );
+
+    return saved;
   }
 
   // 친구 요청 거절

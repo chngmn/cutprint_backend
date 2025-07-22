@@ -16,6 +16,7 @@ import awsConfig from './config/aws.config';
 import { PhotoModule } from './photo/photo.module';
 import { UpdateLastActiveInterceptor } from './update-last-active.interceptor';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { NotificationModule } from './notification/notification.module';
 
 
 @Module({
@@ -41,6 +42,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
     AuthModule,
     FriendshipModule,
     PhotoModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [

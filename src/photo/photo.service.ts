@@ -4,6 +4,8 @@ import { Repository } from 'typeorm';
 import { Photo } from '../entities/photo.entity';
 import { S3Service } from '../s3/s3.service';
 import { Readable } from 'stream';
+import { NotificationService } from '../notification/notification.service';
+import { User } from '../entities/user.entity';
 
 export interface CreatePhotoDto {
   creator_id: number;
@@ -17,6 +19,9 @@ export class PhotoService {
     @InjectRepository(Photo)
     private photoRepository: Repository<Photo>,
     private s3Service: S3Service,
+    private notificationService: NotificationService,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
   ) {}
 
   async uploadPhoto(file: Express.Multer.File, createPhotoDto: CreatePhotoDto): Promise<Photo> {
@@ -134,6 +139,10 @@ export class PhotoService {
       const userIds = (photoUserIds || []).map(id => Number(id));
       console.log('userIds', userIds);
 
+      // creator 닉네임 조회
+      const creator = await this.userRepository.findOne({ where: { id: createPhotoDto.creator_id } });
+      const creatorNickname = creator?.nickname || '친구';
+
       for (const photoUserId of userIds) {
         const photoShare = this.photoRepository.create({
           creator_id: photoUserId,
@@ -141,6 +150,11 @@ export class PhotoService {
           s3_key: s3Key,
         });
         await this.photoRepository.save(photoShare);
+        // 알림 생성
+        await this.notificationService.createNotification(
+          photoUserId,
+          `${creatorNickname}님이 사진을 앨범에 등록했습니다.`
+        );
       }
 
       return savedPhoto;
