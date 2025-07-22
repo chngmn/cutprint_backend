@@ -19,10 +19,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 
     // ② JwtModule 을 registerAsync 로 설정
     JwtModule.registerAsync({
-      imports: [ConfigModule],           // ConfigModule 주입
-      inject: [ConfigService],          // ConfigService 주입
+      imports: [ConfigModule], // ConfigModule 주입
+      inject: [ConfigService], // ConfigService 주입
       useFactory: (config: ConfigService) => ({
-        secret: config.get<string>('JWT_SECRET'),      // 이제 undefined 걱정 없음
+        secret: config.get<string>('JWT_SECRET'), // 이제 undefined 걱정 없음
         signOptions: { expiresIn: '1d' },
       }),
     }),

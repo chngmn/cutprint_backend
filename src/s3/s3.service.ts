@@ -1,6 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+  DeleteObjectCommand,
+} from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -21,7 +26,10 @@ export class S3Service {
     this.bucketName = this.configService.get('aws.s3.bucketName')!;
   }
 
-  async uploadFile(file: Express.Multer.File, folder: string = 'photos'): Promise<string> {
+  async uploadFile(
+    file: Express.Multer.File,
+    folder: string = 'photos',
+  ): Promise<string> {
     try {
       const fileExtension = file.originalname.split('.').pop();
       const fileName = `${folder}/${uuidv4()}.${fileExtension}`;
@@ -78,7 +86,7 @@ export class S3Service {
   //     Key: `photos/${fileName}`,
   //     ContentType: contentType,
   //   });
-  //   
+  //
   //   return await getSignedUrl(this.s3Client, command, { expiresIn: 300 }); // 5 minutes
   // }
 }

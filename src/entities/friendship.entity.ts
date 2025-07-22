@@ -1,5 +1,11 @@
 // src/friendship/friendship.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+} from 'typeorm';
 import { User } from './user.entity'; // User 엔티티 import
 
 @Entity('friendships')
@@ -29,9 +35,9 @@ export class Friendship {
   receiver_close_friend: boolean; // 받는자가 요청자를 친한 친구로 지정했는지
 
   // 관계 정의
-  @ManyToOne(() => User, user => user.requestedFriendships)
+  @ManyToOne(() => User, (user) => user.requestedFriendships)
   requester: User;
 
-  @ManyToOne(() => User, user => user.receivedFriendships)
+  @ManyToOne(() => User, (user) => user.receivedFriendships)
   receiver: User;
 }

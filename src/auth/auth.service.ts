@@ -16,7 +16,7 @@ export class AuthService {
 
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.usersRepository.findOne({ where: { email } });
-    if (user && await bcrypt.compare(password, user.password_hash)) {
+    if (user && (await bcrypt.compare(password, user.password_hash))) {
       const { password_hash, ...result } = user;
       return result;
     }
@@ -30,13 +30,22 @@ export class AuthService {
     };
   }
 
-  async createUser(email: string, password: string, nickname: string, profile_image_url?: string) {
+  async createUser(
+    email: string,
+    password: string,
+    nickname: string,
+    profile_image_url?: string,
+  ) {
     // 이메일, 닉네임 중복 체크
-    const existingEmail = await this.usersRepository.findOne({ where: { email } });
+    const existingEmail = await this.usersRepository.findOne({
+      where: { email },
+    });
     if (existingEmail) {
       throw new Error('이미 사용 중인 이메일입니다.');
     }
-    const existingNickname = await this.usersRepository.findOne({ where: { nickname } });
+    const existingNickname = await this.usersRepository.findOne({
+      where: { nickname },
+    });
     if (existingNickname) {
       throw new Error('이미 사용 중인 닉네임입니다.');
     }

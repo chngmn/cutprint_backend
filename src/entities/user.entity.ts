@@ -53,7 +53,13 @@
 // }
 
 // src/user/user.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  OneToMany,
+} from 'typeorm';
 import { Friendship } from './friendship.entity'; // Friendship 엔티티 import
 import { Photo } from './photo.entity'; // Photo 엔티티 import (수정된 Photo 엔티티)
 import { Notification } from './notification.entity'; // Notification 엔티티 import
@@ -88,10 +94,10 @@ export class User {
   created_at: Date;
 
   // 관계 정의
-  @OneToMany(() => Friendship, friendship => friendship.requester)
+  @OneToMany(() => Friendship, (friendship) => friendship.requester)
   requestedFriendships: Friendship[];
 
-  @OneToMany(() => Friendship, friendship => friendship.receiver)
+  @OneToMany(() => Friendship, (friendship) => friendship.receiver)
   receivedFriendships: Friendship[];
 
   // PhotoSession 및 SessionInvite 관련 관계 제거
@@ -102,9 +108,9 @@ export class User {
   // sessionInvites: SessionInvite[];
 
   // Photo 엔티티와의 관계를 creator (createdPhotos)로 수정
-  @OneToMany(() => Photo, photo => photo.creator)
+  @OneToMany(() => Photo, (photo) => photo.creator)
   createdPhotos: Photo[]; // 이 사용자가 생성한 모든 네 컷 사진들
 
-  @OneToMany(() => Notification, notification => notification.user)
+  @OneToMany(() => Notification, (notification) => notification.user)
   notifications: Notification[];
 }

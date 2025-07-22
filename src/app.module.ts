@@ -18,7 +18,6 @@ import { UpdateLastActiveInterceptor } from './update-last-active.interceptor';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { NotificationModule } from './notification/notification.module';
 
-
 @Module({
   imports: [
     ConfigModule.forRoot({
