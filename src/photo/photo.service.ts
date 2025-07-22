@@ -26,13 +26,13 @@ export class PhotoService {
     private userRepository: Repository<User>,
     @InjectRepository(Friendship)
     private friendshipRepository: Repository<Friendship>,
-  ) {}
+  ) { }
 
   async uploadPhoto(file: Express.Multer.File, createPhotoDto: CreatePhotoDto): Promise<Photo> {
     try {
       // Upload file to S3
       const s3Url = await this.s3Service.uploadFile(file, 'photos');
-      
+
       // Extract S3 key from URL for future deletion
       const url = new URL(s3Url);
       const s3Key = url.pathname.substring(1); // Remove leading slash
@@ -47,7 +47,7 @@ export class PhotoService {
 
       const savedPhoto = await this.photoRepository.save(photo);
       this.logger.log(`Photo saved successfully with ID: ${savedPhoto.id}`);
-      
+
       return savedPhoto;
     } catch (error) {
       this.logger.error('Error uploading photo:', error);
@@ -70,7 +70,7 @@ export class PhotoService {
 
   async getPhotosByUserId(userId: number, viewerId?: number): Promise<Photo[]> {
     console.log('user id', userId);
-    
+
     const allPhotos = await this.photoRepository.find({
       where: { creator_id: userId },
       relations: ['creator'],
@@ -83,14 +83,14 @@ export class PhotoService {
     }
 
     // Filter photos based on visibility and friendship
-    const visiblePhotos = [];
-    
+    const visiblePhotos: Photo[] = [];
+
     for (const photo of allPhotos) {
       if (await this.canViewPhoto(photo, viewerId)) {
         visiblePhotos.push(photo);
       }
     }
-    
+
     return visiblePhotos;
   }
 
@@ -134,7 +134,7 @@ export class PhotoService {
         encoding: '7bit',
         mimetype: 'image/png',
         size: buffer.length,
-        stream: new Readable({ read() {} }),
+        stream: new Readable({ read() { } }),
         destination: '',
         filename: '',
         path: '',
@@ -244,8 +244,8 @@ export class PhotoService {
 
   // Update photo visibility
   async updatePhotoVisibility(
-    photoId: number, 
-    userId: number, 
+    photoId: number,
+    userId: number,
     visibility: 'PRIVATE' | 'CLOSE_FRIENDS' | 'ALL_FRIENDS'
   ): Promise<Photo> {
     const photo = await this.photoRepository.findOne({
