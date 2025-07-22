@@ -59,7 +59,8 @@ export class FriendshipController {
         id: friend.id.toString(),
         name: friend.nickname,
         profileImage: friend.profile_image_url,
-        status: '온라인' // 실제로는 온라인 상태를 관리하는 로직이 필요
+        status: '온라인', // 실제로는 온라인 상태를 관리하는 로직이 필요
+        isCloseFriend: friend.isCloseFriend
       }))
     };
   }
@@ -120,6 +121,33 @@ export class FriendshipController {
     return {
       success: true,
       message: '친구를 삭제했습니다.'
+    };
+  }
+
+  // 친한 친구 토글
+  @Post('close-friend/:friendId')
+  async toggleCloseFriend(@Param('friendId') friendId: number, @Request() req) {
+    const result = await this.friendshipService.toggleCloseFriend(req.user.userId, friendId);
+    return {
+      success: true,
+      message: result.isCloseFriend ? '친한 친구로 지정했습니다.' : '친한 친구 지정을 해제했습니다.',
+      data: result
+    };
+  }
+
+  // 친한 친구 목록 조회
+  @Get('close-friends')
+  async getCloseFriends(@Request() req) {
+    const closeFriends = await this.friendshipService.getCloseFriends(req.user.userId);
+    return {
+      success: true,
+      data: closeFriends.map(friend => ({
+        id: friend.id.toString(),
+        name: friend.nickname,
+        profileImage: friend.profile_image_url,
+        status: '온라인', // 실제로는 온라인 상태를 관리하는 로직이 필요
+        isCloseFriend: true
+      }))
     };
   }
 }

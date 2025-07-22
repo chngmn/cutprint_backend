@@ -126,8 +126,8 @@ export class FriendshipService {
     await this.friendshipRepository.remove(friendship);
   }
 
-  // 내 친구 목록 조회
-  async getFriends(userId: number): Promise<User[]> {
+  // 내 친구 목록 조회 (친한 친구 정보 포함)
+  async getFriends(userId: number): Promise<any[]> {
     const friendships = await this.friendshipRepository.find({
       where: [
         { requester_id: userId, status: 'accepted' },
@@ -136,10 +136,18 @@ export class FriendshipService {
       relations: ['requester', 'receiver']
     });
 
-    // 내가 아닌 상대방 정보만 반환
-    return friendships.map(friendship => 
-      friendship.requester_id === userId ? friendship.receiver : friendship.requester
-    );
+    // 내가 아닌 상대방 정보와 친한 친구 여부 반환
+    return friendships.map(friendship => {
+      const friend = friendship.requester_id === userId ? friendship.receiver : friendship.requester;
+      const isCloseFriend = friendship.requester_id === userId ? 
+        friendship.requester_close_friend : 
+        friendship.receiver_close_friend;
+      
+      return {
+        ...friend,
+        isCloseFriend
+      };
+    });
   }
 
   // 받은 친구 요청 목록 조회
@@ -233,5 +241,50 @@ export class FriendshipService {
     }
 
     await this.friendshipRepository.remove(friendship);
+  }
+
+  // 친한 친구 토글
+  async toggleCloseFriend(userId: number, friendId: number): Promise<{ isCloseFriend: boolean }> {
+    const friendship = await this.friendshipRepository.findOne({
+      where: [
+        { requester_id: userId, receiver_id: friendId, status: 'accepted' },
+        { requester_id: friendId, receiver_id: userId, status: 'accepted' }
+      ]
+    });
+
+    if (!friendship) {
+      throw new NotFoundException('친구 관계를 찾을 수 없습니다.');
+    }
+
+    // 현재 사용자가 requester인지 receiver인지 확인하고 해당 필드 토글
+    if (friendship.requester_id === userId) {
+      friendship.requester_close_friend = !friendship.requester_close_friend;
+      await this.friendshipRepository.save(friendship);
+      return { isCloseFriend: friendship.requester_close_friend };
+    } else {
+      friendship.receiver_close_friend = !friendship.receiver_close_friend;
+      await this.friendshipRepository.save(friendship);
+      return { isCloseFriend: friendship.receiver_close_friend };
+    }
+  }
+
+  // 친한 친구 목록 조회
+  async getCloseFriends(userId: number): Promise<any[]> {
+    const friendships = await this.friendshipRepository.find({
+      where: [
+        { requester_id: userId, status: 'accepted', requester_close_friend: true },
+        { receiver_id: userId, status: 'accepted', receiver_close_friend: true }
+      ],
+      relations: ['requester', 'receiver']
+    });
+
+    // 친한 친구로 지정된 상대방 정보만 반환
+    return friendships.map(friendship => {
+      const friend = friendship.requester_id === userId ? friendship.receiver : friendship.requester;
+      return {
+        ...friend,
+        isCloseFriend: true
+      };
+    });
   }
 }

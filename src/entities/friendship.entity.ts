@@ -22,6 +22,12 @@ export class Friendship {
   @Column({ type: 'timestamptz', nullable: true })
   responded_at: Date;
 
+  @Column({ type: 'boolean', default: false })
+  requester_close_friend: boolean; // 요청자가 받는자를 친한 친구로 지정했는지
+
+  @Column({ type: 'boolean', default: false })
+  receiver_close_friend: boolean; // 받는자가 요청자를 친한 친구로 지정했는지
+
   // 관계 정의
   @ManyToOne(() => User, user => user.requestedFriendships)
   requester: User;
