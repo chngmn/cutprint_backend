@@ -81,6 +81,9 @@ export class User {
   @Column({ type: 'text', nullable: true })
   profile_image_url: string;
 
+  @Column({ type: 'timestamptz', nullable: true })
+  lastActiveAt: Date;
+
   @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 

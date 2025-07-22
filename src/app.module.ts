@@ -14,6 +14,8 @@ import { ConfigModule } from '@nestjs/config';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import awsConfig from './config/aws.config';
 import { PhotoModule } from './photo/photo.module';
+import { UpdateLastActiveInterceptor } from './update-last-active.interceptor';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 
 
 @Module({
@@ -35,11 +37,18 @@ import { PhotoModule } from './photo/photo.module';
       autoLoadEntities: true, // 엔티티 파일 자동 로드
       namingStrategy: new SnakeNamingStrategy(),
     }),
+    TypeOrmModule.forFeature([User]),
     AuthModule,
     FriendshipModule,
     PhotoModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: UpdateLastActiveInterceptor,
+    },
+  ],
 })
 export class AppModule {}
