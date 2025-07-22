@@ -38,6 +38,7 @@ export class PhotoController {
   }))
   async uploadPhoto(
     @UploadedFile() file: Express.Multer.File,
+    @Body('visibility') visibility: 'PRIVATE' | 'CLOSE_FRIENDS' | 'ALL_FRIENDS',
     @Request() req,
   ): Promise<Photo> {
     if (!file) {
@@ -46,6 +47,7 @@ export class PhotoController {
 
     const createPhotoDto: CreatePhotoDto = {
       creator_id: req.user.userId,
+      visibility: visibility || 'ALL_FRIENDS',
     };
 
     return this.photoService.uploadPhoto(file, createPhotoDto);
@@ -54,6 +56,7 @@ export class PhotoController {
   @Post('upload-base64')
   async uploadPhotoBase64(
     @Body('image') image: string,
+    @Body('visibility') visibility: 'PRIVATE' | 'CLOSE_FRIENDS' | 'ALL_FRIENDS',
     @Request() req,
   ): Promise<Photo> {
     if (!image) {
@@ -63,6 +66,7 @@ export class PhotoController {
 
     const createPhotoDto: CreatePhotoDto = {
       creator_id: req.user.userId,
+      visibility: visibility || 'ALL_FRIENDS',
     };
 
     return this.photoService.uploadPhotoBase64(image, createPhotoDto, photoUserIds);
@@ -82,9 +86,9 @@ export class PhotoController {
   }
 
   @Get('user/:userId')
-  async getUserPhotos(@Param('userId', ParseIntPipe) userId: number): Promise<Photo[]> {
+  async getUserPhotos(@Param('userId', ParseIntPipe) userId: number, @Req() req): Promise<Photo[]> {
     console.log('photo controller user id', userId);
-    return this.photoService.getPhotosByUserId(userId);
+    return this.photoService.getPhotosByUserId(userId, req.user.userId);
   }
 
   @Get(':id')
@@ -105,5 +109,22 @@ export class PhotoController {
   ): Promise<{ message: string }> {
     await this.photoService.deletePhoto(id, req.user.userId);
     return { message: 'Photo deleted successfully' };
+  }
+
+  @Post(':id/visibility')
+  async updatePhotoVisibility(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('visibility') visibility: 'PRIVATE' | 'CLOSE_FRIENDS' | 'ALL_FRIENDS',
+    @Request() req,
+  ): Promise<{ message: string; photo: Photo }> {
+    if (!visibility) {
+      throw new BadRequestException('Visibility is required');
+    }
+    
+    const photo = await this.photoService.updatePhotoVisibility(id, req.user.userId, visibility);
+    return { 
+      message: 'Photo visibility updated successfully',
+      photo 
+    };
   }
 }

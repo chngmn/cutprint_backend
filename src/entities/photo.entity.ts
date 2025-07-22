@@ -17,6 +17,13 @@ export class Photo {
   @Column({ type: 'text', nullable: true })
   s3_key?: string; // S3 객체 키 (삭제 시 필요)
 
+  @Column({ 
+    type: 'enum',
+    enum: ['PRIVATE', 'CLOSE_FRIENDS', 'ALL_FRIENDS'],
+    default: 'ALL_FRIENDS'
+  })
+  visibility: 'PRIVATE' | 'CLOSE_FRIENDS' | 'ALL_FRIENDS'; // 사진 공개 범위
+
   // 'taken_at' 대신 'created_at'으로 변경하여 사진이 생성된 시점을 나타냅니다.
   @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
