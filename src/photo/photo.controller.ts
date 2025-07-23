@@ -122,10 +122,10 @@ export class PhotoController {
   ): Promise<{ shareLink: string }> {
     // 사진 존재 확인 및 접근 권한 확인
     const photo = await this.photoService.getPhotoById(id);
-    
+
     // 사진 소유자이거나 공개 범위에 따른 접근 권한 확인
     await this.photoService.verifyPhotoAccess(id, req.user.userId);
-    
+
     const shareLink = `https://cutprint.app/photo/${id}`;
     return { shareLink };
   }
