@@ -256,8 +256,8 @@ export class PhotoService {
   // Verify photo access for sharing
   async verifyPhotoAccess(photoId: number, userId: number): Promise<void> {
     const photo = await this.getPhotoById(photoId);
-    
-    if (!await this.canViewPhoto(photo, userId)) {
+
+    if (!(await this.canViewPhoto(photo, userId))) {
       throw new NotFoundException(
         `Photo with ID ${photoId} not found or you don't have permission to access it`,
       );
